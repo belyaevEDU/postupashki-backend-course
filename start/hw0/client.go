@@ -1,13 +1,17 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
+	"io"
 	"net"
+	"strings"
 )
 
 const (
-	address  = "localhost:8080"
-	response = "OK\n"
+	address    = "localhost:8080"
+	response   = "OK\n"
+	trimCutset = "\n "
 )
 
 func main() {
@@ -32,8 +36,8 @@ func main() {
 	}
 
 	if string(buffer) == response {
-		fmt.Println("The server returned the expected response:", response)
+		fmt.Println("The server returned the expected response:", strings.TrimRight(response, trimCutset))
 	} else {
-		fmt.Println("The server returned an unexpected response:", string(buffer))
+		fmt.Println("The server returned an unexpected response:", strings.TrimRight(string(buffer), trimCutset))
 	}
 }
