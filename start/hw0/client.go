@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"net"
+	"os"
 	"strings"
 )
 
@@ -25,6 +26,7 @@ func main() {
 		err := connection.Close()
 		if err != nil {
 			fmt.Println("error raised when closing the connection:", err)
+			os.Exit(1)
 		}
 	}()
 
@@ -32,7 +34,7 @@ func main() {
 	buffer, err := io.ReadAll(reader)
 
 	if err != nil {
-		fmt.Println("error raised when reading: ")
+		fmt.Println("error raised when reading:", err)
 	}
 
 	if string(buffer) == response {
