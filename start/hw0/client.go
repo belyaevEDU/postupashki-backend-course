@@ -17,7 +17,12 @@ func main() {
 		return
 	}
 
-	defer connection.Close()
+	defer func() {
+		err := connection.Close()
+		if err != nil {
+			fmt.Println("error raised when closing the connection:", err)
+		}
+	}()
 
 	reader := bufio.NewReader(connection)
 	buffer, err := io.ReadAll(reader)
