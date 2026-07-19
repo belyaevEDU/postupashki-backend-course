@@ -1,8 +1,13 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"net"
+	"os"
+	"os/signal"
+	"sync"
+	"syscall"
 )
 
 const (
@@ -11,13 +16,19 @@ const (
 )
 
 func main() {
+	ctx, stopFunc := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stopFunc()
+
+	var workGroup sync.WaitGroup
+
 	listener, err := net.Listen("tcp", address)
 	if err != nil {
 		fmt.Println("error raised creating a listener:", err)
 		return
 	}
 
-	defer func() {
+	go func() {
+		<-ctx.Done()
 		err := listener.Close()
 		if err != nil {
 			fmt.Println("error closing listener:", err)
@@ -27,12 +38,23 @@ func main() {
 	for {
 		connection, err := listener.Accept()
 		if err != nil {
-			fmt.Println("error raised accepting a connection:", err)
-			continue
+			select {
+			case <-ctx.Done():
+
+			default:
+				fmt.Println("error raised accepting a connection:", err)
+			}
+			break
 		}
 
-		go handleConnection(connection)
+		workGroup.Go(func() {
+			handleConnection(connection)
+		})
 	}
+
+	fmt.Println("Waiting..")
+	workGroup.Wait()
+	fmt.Println("Closed")
 }
 
 func handleConnection(connection net.Conn) {
