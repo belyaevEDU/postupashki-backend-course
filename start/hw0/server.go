@@ -43,6 +43,7 @@ func main() {
 
 			default:
 				fmt.Println("error raised accepting a connection:", err)
+				continue
 			}
 			break
 		}
