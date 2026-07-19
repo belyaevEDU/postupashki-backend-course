@@ -19,8 +19,12 @@ func main() {
 
 	defer connection.Close()
 
-	buffer := make([]byte, 3)
-	connection.Read(buffer)
+	reader := bufio.NewReader(connection)
+	buffer, err := io.ReadAll(reader)
+
+	if err != nil {
+		fmt.Println("error raised when reading: ")
+	}
 
 	if string(buffer) == response {
 		fmt.Println("The server returned the expected response:", response)
