@@ -59,3 +59,29 @@
 ```bash
 make test
 ```
+
+## Материалы
+
+### Конкуры
+
+- [Здоровая конкуренция в GO. Главное не перехитрить самого себя](https://habr.com/ru/companies/timeweb/articles/770912/)
+
+- [Go-контексты и микросервисы](https://habr.com/ru/companies/ispring/articles/650941/)
+
+### База по горутинам / многопоточке
+
+- [Конкурентность в Go: пять примеров](https://habr.com/ru/companies/ru_mts/articles/680324/)
+
+- [Горутины и каналы в Go: эффективная конкурентность](https://habr.com/ru/articles/869400/)
+
+- [Конкуренция в Go](https://habr.com/ru/articles/896940/)
+
+### Глубже про context / отмену
+
+- [Разбираемся с пакетом Context в Golang](https://habr.com/ru/companies/nixys/articles/461723/)
+
+- [Каскадная отмена контекстов в Go: от исходного кода до production-паттернов](https://habr.com/ru/articles/921902/)
+
+### Скорее интересное про хеджирование (для кругозора, не для задачи)
+
+- [Hedged Requests в распределённых системах](https://proselyte.net/hedged-requests/)
