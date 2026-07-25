@@ -1,7 +1,10 @@
 package main
 
 import (
+	"context"
 	"fmt"
+	"net"
+	"net/http"
 	"os"
 
 	flag "github.com/spf13/pflag"
@@ -34,6 +37,25 @@ func main() {
 	}
 }
 
+func makeQuery(url string, client http.Client, responseChannel chan *http.Response, context context.Context) {
+	request, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		fmt.Printf("error raised when creating request: %v\n", err)
+		return
+	}
+
+	response, err := client.Do(request.WithContext(context))
+	if err != nil && !errorIsTimeout(err) {
+		select {
+		case <-context.Done():
+		default:
+			fmt.Printf("error raised when requesting from %v: %v\n", url, err)
+		}
+	} else {
+		responseChannel <- response
+	}
+}
+
 func processArguments() (*CliArguments, error) {
 	var timeoutInt int
 	var help bool
@@ -53,4 +75,13 @@ func processArguments() (*CliArguments, error) {
 		timeout,
 		help,
 	}, nil
+}
+
+func errorIsTimeout(err error) bool {
+	if err == nil {
+		return false
+	}
+
+	errNetError, ok := err.(net.Error)
+	return ok && errNetError.Timeout()
 }
