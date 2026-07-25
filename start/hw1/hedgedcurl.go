@@ -22,16 +22,19 @@ func main() {
 }
 
 func processArguments() (*CliArguments, error) {
-	timeoutInt := *flag.IntP("timeout", "t", defaultTimeout, "HTTP request timeout in seconds")
-	if timeoutInt <= 0 {
+	timeoutInt := flag.IntP("timeout", "t", defaultTimeout, "HTTP request timeout in seconds")
+	help := flag.BoolP("help", "h", false, "Show help text")
+
+	flag.Parse()
+
+	if *timeoutInt <= 0 {
 		return nil, fmt.Errorf("error raised while processing given CLI arguments: %v", timeoutArgErrMessage)
 	}
-	timeout := uint16(timeoutInt)
-	help := *flag.BoolP("help", "h", false, "Show help text")
+	timeout := uint16(*timeoutInt)
 
 	return &CliArguments{
 		flag.Args(),
 		timeout,
-		help,
+		*help,
 	}, nil
 }
