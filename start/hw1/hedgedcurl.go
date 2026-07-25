@@ -14,7 +14,7 @@ type CliArguments struct {
 }
 
 const (
-	defaultTimeout       = 16
+	defaultTimeout       = 15
 	timeoutArgErrMessage = "Incorrect usage of the timeout argument"
 	helpMessage          = `Запрос к нескольким серверам, вернет первый полученный ответ
 ./hedgedcurl https://motherfuckingwebsite.com/ https://thebestmotherfucking.website/ https://belyaev.work`
