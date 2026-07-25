@@ -25,6 +25,10 @@ const (
 	helpMessage = `Запрос к нескольким серверам, вернет первый полученный ответ
 ./hedgedcurl https://motherfuckingwebsite.com/ https://thebestmotherfucking.website/ https://belyaev.work`
 	invalidUrlMessage = "Один из URLов не валиден. Формат: https://example.com или http://example.com"
+	timedOutMessage   = "Timed out."
+
+	timeoutFlagMessage = "Время таймаута запроса в секундах"
+	helpFlagMessage    = "Вывод текста об использовании утилиты"
 )
 
 func main() {
@@ -66,7 +70,7 @@ func main() {
 
 	select {
 	case <-context.Done(): // means timeout ?
-		fmt.Println("Timed out.")
+		fmt.Println(timedOutMessage)
 		os.Exit(timeoutErrorCode)
 	case response := <-responseChannel:
 		defer response.Body.Close()
@@ -105,8 +109,8 @@ func processArguments() (*CliArguments, error) {
 	var timeoutInt int
 	var help bool
 
-	flag.IntVarP(&timeoutInt, "timeout", "t", defaultTimeout, "HTTP request timeout in seconds")
-	flag.BoolVarP(&help, "help", "h", false, "Show help text")
+	flag.IntVarP(&timeoutInt, "timeout", "t", defaultTimeout, timeoutFlagMessage)
+	flag.BoolVarP(&help, "help", "h", false, helpFlagMessage)
 
 	flag.Parse()
 
