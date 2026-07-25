@@ -24,7 +24,7 @@ const (
 
 	helpMessage = `Запрос к нескольким серверам, вернет первый полученный ответ
 ./hedgedcurl https://motherfuckingwebsite.com/ https://thebestmotherfucking.website/ https://belyaev.work`
-	invalidUrlMessage = "Один из URLов не валиден. Формат: https://example.com или http://example.com"
+	invalidUrlMessage = "Один из URLов не валиден. Формат: https://example.com или http://example.com. Пути и query параметры разрешены."
 	timedOutMessage   = "Timed out."
 
 	timeoutFlagMessage = "Время таймаута запроса в секундах"
