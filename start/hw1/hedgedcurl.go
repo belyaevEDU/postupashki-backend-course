@@ -58,23 +58,26 @@ func main() {
 		os.Exit(timeoutErrorCode)
 	case response := <-responseChannel:
 		defer response.Body.Close()
-		cancel()
 
-		outputResponse(response)
+		err = outputResponse(response)
+		if err != nil {
+			fmt.Println("error raised when outputting response: ", err)
+		}
+		cancel()
 	}
 }
 
-func makeRequest(url string, client http.Client, responseChannel chan *http.Response, context context.Context) {
-	request, err := http.NewRequest("GET", url, nil)
+func makeRequest(url string, client http.Client, responseChannel chan *http.Response, ctx context.Context) {
+	request, err := http.NewRequestWithContext(ctx, "GET", url, nil)
 	if err != nil {
 		fmt.Printf("error raised when creating request: %v\n", err)
 		return
 	}
 
-	response, err := client.Do(request.WithContext(context))
+	response, err := client.Do(request)
 	if err != nil && !errorIsTimeout(err) {
 		select {
-		case <-context.Done():
+		case <-ctx.Done():
 		default:
 			fmt.Printf("error raised when requesting from %v: %v\n", url, err)
 		}
