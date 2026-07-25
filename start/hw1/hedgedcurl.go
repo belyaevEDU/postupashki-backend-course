@@ -34,7 +34,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	if cliArguments.help {
+	if cliArguments.help || len(cliArguments.urls) == 0 {
 		fmt.Printf("%s\n\n", helpMessage)
 		flag.Usage()
 		os.Exit(0)
@@ -60,7 +60,6 @@ func main() {
 		defer response.Body.Close()
 		cancel()
 
-		fmt.Println("Response received:")
 		outputResponse(response)
 	}
 }
@@ -115,20 +114,20 @@ func errorIsTimeout(err error) bool {
 }
 
 func outputResponse(response *http.Response) error {
-	fmt.Println("Response received:")
+	fmt.Printf("Response received:\n\n")
 
-	fmt.Printf("Status code: %d\n", response.StatusCode)
+	fmt.Printf("Status code: %d\n\n", response.StatusCode)
 
-	fmt.Println("Headers:")
+	fmt.Printf("Headers:\n")
 	for name, value := range response.Header {
-		fmt.Printf("%s: %s", name, value)
+		fmt.Printf("%s: %s\n", name, value)
 	}
 
 	if response.StatusCode != http.StatusOK {
 		return nil
 	}
 
-	fmt.Println("Body:")
+	fmt.Println("\nBody:")
 	body, err := io.ReadAll(response.Body)
 	if err != nil {
 		return fmt.Errorf("error raised when reading a response body: %v", err)
