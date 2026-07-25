@@ -73,7 +73,12 @@ func main() {
 		fmt.Println(timedOutMessage)
 		os.Exit(timeoutErrorCode)
 	case response := <-responseChannel:
-		defer response.Body.Close()
+		defer func() {
+			err := response.Body.Close()
+			if err != nil {
+				fmt.Printf("error raised when closing a response body: %s\n", err)
+			}
+		}()
 
 		err = outputResponse(response)
 		if err != nil {
@@ -100,7 +105,10 @@ func makeRequest(url string, client http.Client, responseChannel chan *http.Resp
 
 	select {
 	case <-ctx.Done():
-		response.Body.Close()
+		err := response.Body.Close()
+		if err != nil {
+			fmt.Printf("error raised when closing a response body: %s", err)
+		}
 	case responseChannel <- response:
 	}
 }
