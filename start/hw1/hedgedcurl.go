@@ -34,7 +34,7 @@ const (
 func main() {
 	cliArguments, err := processArguments()
 	if err != nil {
-		fmt.Println(err)
+		fmt.Printf("error raised when parsing cli arguments: %s\n", err)
 		os.Exit(1)
 	}
 
@@ -47,7 +47,7 @@ func main() {
 	for _, url := range cliArguments.urls {
 		result, err := validateUrl(url)
 		if err != nil {
-			fmt.Println(err)
+			fmt.Printf("error raised when validating a url: %s\n", err)
 			os.Exit(1)
 		}
 
@@ -107,7 +107,7 @@ func makeRequest(url string, client http.Client, responseChannel chan *http.Resp
 	case <-ctx.Done():
 		err := response.Body.Close()
 		if err != nil {
-			fmt.Printf("error raised when closing a response body: %s", err)
+			fmt.Printf("error raised when closing a response body: %s\n", err)
 		}
 	case responseChannel <- response:
 	}
