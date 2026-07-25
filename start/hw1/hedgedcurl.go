@@ -24,6 +24,7 @@ const (
 
 	helpMessage = `Запрос к нескольким серверам, вернет первый полученный ответ
 ./hedgedcurl https://motherfuckingwebsite.com/ https://thebestmotherfucking.website/ https://belyaev.work`
+	invalidUrlMessage = "Один из URLов не валиден. Формат: https://example.com или http://example.com"
 )
 
 func main() {
@@ -37,6 +38,18 @@ func main() {
 		fmt.Printf("%s\n\n", helpMessage)
 		flag.Usage()
 		os.Exit(0)
+	}
+
+	for _, url := range cliArguments.urls {
+		result, err := validateUrl(url)
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+
+		if !result {
+			fmt.Println(invalidUrlMessage)
+		}
 	}
 
 	responseChannel := make(chan *http.Response)
@@ -69,14 +82,14 @@ func main() {
 func makeRequest(url string, client http.Client, responseChannel chan *http.Response, ctx context.Context) {
 	request, err := http.NewRequestWithContext(ctx, "GET", url, nil)
 	if err != nil {
-		fmt.Printf("error raised when creating request: %w\n", err)
+		fmt.Printf("error raised when creating request: %s\n", err)
 		return
 	}
 
 	response, err := client.Do(request)
 	if err != nil {
 		if ctx.Err() == nil && !errorIsTimeout(err) {
-			fmt.Printf("error raised when requesting from %w: %w\n", url, err)
+			fmt.Printf("error raised when requesting from %s: %s\n", url, err)
 		}
 		return
 	}
@@ -98,7 +111,7 @@ func processArguments() (*CliArguments, error) {
 	flag.Parse()
 
 	if timeoutInt <= 0 {
-		return nil, fmt.Errorf("error raised while processing given CLI arguments: %w", timeoutArgErrMessage)
+		return nil, fmt.Errorf("error raised while processing given CLI arguments: %s", timeoutArgErrMessage)
 	}
 	timeout := uint16(timeoutInt)
 
