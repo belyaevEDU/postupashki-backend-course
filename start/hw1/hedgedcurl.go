@@ -69,14 +69,14 @@ func main() {
 func makeRequest(url string, client http.Client, responseChannel chan *http.Response, ctx context.Context) {
 	request, err := http.NewRequestWithContext(ctx, "GET", url, nil)
 	if err != nil {
-		fmt.Printf("error raised when creating request: %v\n", err)
+		fmt.Printf("error raised when creating request: %w\n", err)
 		return
 	}
 
 	response, err := client.Do(request)
 	if err != nil {
 		if ctx.Err() == nil && !errorIsTimeout(err) {
-			fmt.Printf("error raised when requesting from %v: %v\n", url, err)
+			fmt.Printf("error raised when requesting from %w: %w\n", url, err)
 		}
 		return
 	}
@@ -98,7 +98,7 @@ func processArguments() (*CliArguments, error) {
 	flag.Parse()
 
 	if timeoutInt <= 0 {
-		return nil, fmt.Errorf("error raised while processing given CLI arguments: %v", timeoutArgErrMessage)
+		return nil, fmt.Errorf("error raised while processing given CLI arguments: %w", timeoutArgErrMessage)
 	}
 	timeout := uint16(timeoutInt)
 
@@ -126,7 +126,7 @@ func outputResponse(response *http.Response) error {
 	fmt.Println("\nBody:")
 	body, err := io.ReadAll(response.Body)
 	if err != nil {
-		return fmt.Errorf("error raised when reading a response body: %v", err)
+		return fmt.Errorf("error raised when reading a response body: %w", err)
 	}
 	bodyString := string(body)
 	fmt.Println(bodyString)
