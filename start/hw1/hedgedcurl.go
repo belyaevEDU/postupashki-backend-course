@@ -75,14 +75,17 @@ func makeRequest(url string, client http.Client, responseChannel chan *http.Resp
 	}
 
 	response, err := client.Do(request)
-	if err != nil && !errorIsTimeout(err) {
-		select {
-		case <-ctx.Done():
-		default:
+	if err != nil {
+		if ctx.Err() == nil && !errorIsTimeout(err) {
 			fmt.Printf("error raised when requesting from %v: %v\n", url, err)
 		}
-	} else {
-		responseChannel <- response
+		return
+	}
+
+	select {
+	case <-ctx.Done():
+		response.Body.Close()
+	case responseChannel <- response:
 	}
 }
 
