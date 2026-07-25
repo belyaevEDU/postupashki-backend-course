@@ -49,7 +49,7 @@ func main() {
 	httpClient := http.Client{}
 
 	for _, url := range cliArguments.urls {
-		go makeQuery(url, httpClient, responseChannel, context)
+		go makeRequest(url, httpClient, responseChannel, context)
 	}
 
 	select {
@@ -65,7 +65,7 @@ func main() {
 	}
 }
 
-func makeQuery(url string, client http.Client, responseChannel chan *http.Response, context context.Context) {
+func makeRequest(url string, client http.Client, responseChannel chan *http.Response, context context.Context) {
 	request, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		fmt.Printf("error raised when creating request: %v\n", err)
