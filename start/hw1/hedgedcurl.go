@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"os"
 
 	flag "github.com/spf13/pflag"
 )
@@ -15,10 +16,22 @@ type CliArguments struct {
 const (
 	defaultTimeout       = 16
 	timeoutArgErrMessage = "Incorrect usage of the timeout argument"
+	helpMessage          = `Запрос к нескольким серверам, вернет первый полученный ответ
+./hedgedcurl https://motherfuckingwebsite.com/ https://thebestmotherfucking.website/ https://belyaev.work`
 )
 
 func main() {
+	cliArguments, err := processArguments()
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
 
+	if cliArguments.help {
+		fmt.Printf("%s\n\n", helpMessage)
+		flag.Usage()
+		os.Exit(0)
+	}
 }
 
 func processArguments() (*CliArguments, error) {
