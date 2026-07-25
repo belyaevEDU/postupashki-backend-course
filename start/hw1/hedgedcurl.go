@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"net"
 	"net/http"
 	"os"
 	"time"
@@ -108,15 +107,6 @@ func processArguments() (*CliArguments, error) {
 		timeout,
 		help,
 	}, nil
-}
-
-func errorIsTimeout(err error) bool {
-	if err == nil {
-		return false
-	}
-
-	errNetError, ok := err.(net.Error)
-	return ok && errNetError.Timeout()
 }
 
 func outputResponse(response *http.Response) error {
