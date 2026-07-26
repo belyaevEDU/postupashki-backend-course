@@ -74,7 +74,7 @@ func main() {
 	httpClient := http.Client{}
 
 	for _, url := range cliArguments.urls {
-		go makeRequest(url, &httpClient, responseChannel, ctx)
+		go makeRequest(ctx, url, &httpClient, responseChannel)
 	}
 
 	select {
@@ -97,7 +97,7 @@ func main() {
 	}
 }
 
-func makeRequest(url string, client *http.Client, responseChannel chan *http.Response, ctx context.Context) {
+func makeRequest(ctx context.Context, url string, client *http.Client, responseChannel chan *http.Response) {
 	request, err := http.NewRequestWithContext(ctx, "GET", url, nil)
 	if err != nil {
 		fmt.Printf("error raised when creating request: %s\n", err)
