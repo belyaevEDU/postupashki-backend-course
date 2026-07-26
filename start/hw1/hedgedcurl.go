@@ -21,8 +21,9 @@ const (
 	defaultTimeout       = 15
 	timeoutArgErrMessage = "Incorrect usage of the timeout argument"
 
-	cliArgumentsParsingErrorCode = 2
-	timeoutErrorCode             = 228
+	badCliArgumentsErrorCode = 2
+	urlValidationErrorCode   = 3
+	timeoutErrorCode         = 228
 
 	helpMessage = `Запрос к нескольким серверам, вернет первый полученный ответ
 ./hedgedcurl https://motherfuckingwebsite.com/ https://thebestmotherfucking.website/ https://belyaev.work`
@@ -37,7 +38,7 @@ func main() {
 	cliArguments, err := processArguments()
 	if err != nil {
 		fmt.Printf("error raised when parsing cli arguments: %s\n", err)
-		os.Exit(cliArgumentsParsingErrorCode)
+		os.Exit(badCliArgumentsErrorCode)
 	}
 
 	if cliArguments.help || len(cliArguments.urls) == 0 {
@@ -48,24 +49,24 @@ func main() {
 	if cliArguments.help {
 		os.Exit(0)
 	} else if len(cliArguments.urls) == 0 {
-		os.Exit(2)
+		os.Exit(badCliArgumentsErrorCode)
 	}
 
 	for _, url := range cliArguments.urls {
 		result, err := validateUrl(url)
 		if err != nil {
 			fmt.Printf("error raised when validating a url: %s\n", err)
-			os.Exit(1)
+			os.Exit(urlValidationErrorCode)
 		}
 
 		if !result {
-			fmt.Println(invalidUrlMessage)
-			os.Exit(1)
+			fmt.Printf("%s. URL: %s", invalidUrlMessage, url)
+			os.Exit(urlValidationErrorCode)
 		}
 	}
 
 	responseChannel := make(chan *http.Response)
-	context, cancel := context.WithTimeout(context.Background(), time.Second*time.Duration(cliArguments.timeout))
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*time.Duration(cliArguments.timeout))
 	// the docs state that calling CancelFunc after the 1st call, subsequent calls do nothing
 	// So we don't have to handle the case, when we call cancel after receiving a response from responseChannel
 	defer cancel()
@@ -73,11 +74,11 @@ func main() {
 	httpClient := http.Client{}
 
 	for _, url := range cliArguments.urls {
-		go makeRequest(url, &httpClient, responseChannel, context)
+		go makeRequest(url, &httpClient, responseChannel, ctx)
 	}
 
 	select {
-	case <-context.Done(): // means timeout ?
+	case <-ctx.Done(): // means timeout ?
 		fmt.Println(timedOutMessage)
 		os.Exit(timeoutErrorCode)
 	case response := <-responseChannel:
