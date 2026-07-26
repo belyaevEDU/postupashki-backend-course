@@ -98,7 +98,7 @@ func main() {
 }
 
 func makeRequest(ctx context.Context, url string, client *http.Client, responseChannel chan *http.Response) {
-	request, err := http.NewRequestWithContext(ctx, "GET", url, nil)
+	request, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		fmt.Printf("error raised when creating request: %s\n", err)
 		return
