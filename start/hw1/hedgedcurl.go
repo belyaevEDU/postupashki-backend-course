@@ -153,15 +153,12 @@ func outputResponse(response *http.Response) error {
 		fmt.Printf("%s: %s\n", name, value)
 	}
 
-	if response.StatusCode != http.StatusOK {
-		return nil
-	}
-
-	fmt.Println("\nBody:")
 	body, err := io.ReadAll(response.Body)
 	if err != nil {
 		return fmt.Errorf("error raised when reading a response body: %w", err)
 	}
+
+	fmt.Println("\nBody:")
 	bodyString := string(body)
 	fmt.Println(bodyString)
 
