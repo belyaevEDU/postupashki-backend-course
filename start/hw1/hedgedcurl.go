@@ -19,8 +19,10 @@ type CliArguments struct {
 
 const (
 	defaultTimeout       = 15
-	timeoutErrorCode     = 228
 	timeoutArgErrMessage = "Incorrect usage of the timeout argument"
+
+	cliArgumentsParsingErrorCode = 2
+	timeoutErrorCode             = 228
 
 	helpMessage = `Запрос к нескольким серверам, вернет первый полученный ответ
 ./hedgedcurl https://motherfuckingwebsite.com/ https://thebestmotherfucking.website/ https://belyaev.work`
@@ -35,13 +37,18 @@ func main() {
 	cliArguments, err := processArguments()
 	if err != nil {
 		fmt.Printf("error raised when parsing cli arguments: %s\n", err)
-		os.Exit(1)
+		os.Exit(cliArgumentsParsingErrorCode)
 	}
 
 	if cliArguments.help || len(cliArguments.urls) == 0 {
 		fmt.Printf("%s\n\n", helpMessage)
 		flag.Usage()
+	}
+
+	if cliArguments.help {
 		os.Exit(0)
+	} else if len(cliArguments.urls) == 0 {
+		os.Exit(2)
 	}
 
 	for _, url := range cliArguments.urls {
