@@ -13,7 +13,7 @@ import (
 
 type CliArguments struct {
 	urls    []string
-	timeout uint16
+	timeout uint
 	help    bool
 }
 
@@ -126,7 +126,7 @@ func processArguments() (*CliArguments, error) {
 	if timeoutInt <= 0 {
 		return nil, fmt.Errorf("error raised while processing given CLI arguments: %s", timeoutArgErrMessage)
 	}
-	timeout := uint16(timeoutInt)
+	timeout := uint(timeoutInt)
 
 	return &CliArguments{
 		flag.Args(),
