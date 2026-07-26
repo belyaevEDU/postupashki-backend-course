@@ -1,12 +1,9 @@
 package main
 
 import (
-	"fmt"
 	"net"
-	"regexp"
+	"net/url"
 )
-
-const urlRegex string = `^(http:\/\/www\.|https:\/\/www\.|http:\/\/|https:\/\/|\/|\/\/)?[A-z0-9_-]*?[:]?[A-z0-9_-]*?[@]?(localhost|[A-z0-9]+([\-\.]{1}[a-z0-9]+)*\.[a-z]{2,5})(:[0-9]{1,5})?(\/.*)?$`
 
 func errorIsTimeout(err error) bool {
 	if err == nil {
@@ -17,11 +14,15 @@ func errorIsTimeout(err error) bool {
 	return ok && errNetError.Timeout()
 }
 
-func validateUrl(url string) (bool, error) {
-	regex, err := regexp.Compile(urlRegex)
+func validateUrl(urlString string) (bool, error) {
+	_, err := url.ParseRequestURI(urlString)
+	// didnt really see an opportunity to use the URI down the line.
+	// url.ParseRequestURI assumes that the string provided is from an HTTP request,
+	// while url.Parse accepts relative URLs
+
 	if err != nil {
-		return false, fmt.Errorf("error raised when compiling regex: %w", err)
+		return false, err // wrapping the error down the line already
 	}
 
-	return regex.MatchString(url), nil
+	return true, nil
 }
