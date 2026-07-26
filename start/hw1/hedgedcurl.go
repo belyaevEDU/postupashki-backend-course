@@ -137,9 +137,9 @@ func processArguments() (*CliArguments, error) {
 	timeout := uint(timeoutInt)
 
 	return &CliArguments{
-		flag.Args(),
-		timeout,
-		help,
+		urls:    flag.Args(),
+		timeout: timeout,
+		help:    help,
 	}, nil
 }
 
