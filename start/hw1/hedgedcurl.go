@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"os"
 	"time"
 
@@ -52,15 +53,10 @@ func main() {
 		os.Exit(badCliArgumentsErrorCode)
 	}
 
-	for _, url := range cliArguments.urls {
-		result, err := validateUrl(url)
-		if err != nil {
+	for _, urlString := range cliArguments.urls {
+		_, err := url.ParseRequestURI(urlString)
+		if err != nil { // an error is present if the url is invalid
 			fmt.Printf("error raised when validating a url: %s\n", err)
-			os.Exit(urlValidationErrorCode)
-		}
-
-		if !result {
-			fmt.Printf("%s. URL: %s", invalidUrlMessage, url)
 			os.Exit(urlValidationErrorCode)
 		}
 	}
@@ -97,7 +93,7 @@ func main() {
 	}
 }
 
-func makeRequest(ctx context.Context, url string, client *http.Client, responseChannel chan *http.Response) {
+func makeRequest(ctx context.Context, url string, client *http.Client, responseChannel chan *http.Response) { // отдельный канал для ошибок, выход из цикла только если == len. потом обрабатываем
 	request, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		fmt.Printf("error raised when creating request: %s\n", err)
