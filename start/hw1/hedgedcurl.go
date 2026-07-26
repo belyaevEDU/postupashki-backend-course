@@ -38,12 +38,12 @@ const (
 func main() {
 	cliArguments, err := processArguments()
 	if err != nil {
-		fmt.Printf("error raised when parsing cli arguments: %s\n", err)
+		fmt.Fprintf(os.Stderr, "error raised when parsing cli arguments: %s\n", err)
 		os.Exit(badCliArgumentsErrorCode)
 	}
 
 	if cliArguments.help || len(cliArguments.urls) == 0 {
-		fmt.Printf("%s\n\n", helpMessage)
+		fmt.Fprintf(os.Stderr, "%s\n\n", helpMessage)
 		flag.Usage()
 	}
 
@@ -56,7 +56,7 @@ func main() {
 	for _, urlString := range cliArguments.urls {
 		_, err := url.ParseRequestURI(urlString)
 		if err != nil { // an error is present if the url is invalid
-			fmt.Printf("error raised when validating a url: %s\n", err)
+			fmt.Fprintf(os.Stderr, "error raised when validating a url: %s\n", err)
 			os.Exit(urlValidationErrorCode)
 		}
 	}
@@ -75,19 +75,19 @@ func main() {
 
 	select {
 	case <-ctx.Done(): // means timeout ?
-		fmt.Println(timedOutMessage)
+		fmt.Fprintln(os.Stderr, timedOutMessage)
 		os.Exit(timeoutErrorCode)
 	case response := <-responseChannel:
 		defer func() {
 			err := response.Body.Close()
 			if err != nil {
-				fmt.Printf("error raised when closing a response body: %s\n", err)
+				fmt.Fprintf(os.Stderr, "error raised when closing a response body: %s\n", err)
 			}
 		}()
 
 		err = outputResponse(response)
 		if err != nil {
-			fmt.Println("error raised when outputting response: ", err)
+			fmt.Fprintf(os.Stderr, "error raised when outputting response: %s\n", err)
 		}
 		cancel()
 	}
@@ -96,14 +96,14 @@ func main() {
 func makeRequest(ctx context.Context, url string, client *http.Client, responseChannel chan *http.Response) { // отдельный канал для ошибок, выход из цикла только если == len. потом обрабатываем
 	request, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
-		fmt.Printf("error raised when creating request: %s\n", err)
+		fmt.Fprintf(os.Stderr, "error raised when creating request: %s\n", err)
 		return
 	}
 
 	response, err := client.Do(request)
 	if err != nil {
 		if ctx.Err() == nil && !errorIsTimeout(err) {
-			fmt.Printf("error raised when requesting from %s: %s\n", url, err)
+			fmt.Fprintf(os.Stderr, "error raised when requesting from %s: %s\n", url, err)
 		}
 		return
 	}
@@ -112,7 +112,7 @@ func makeRequest(ctx context.Context, url string, client *http.Client, responseC
 	case <-ctx.Done():
 		err := response.Body.Close()
 		if err != nil {
-			fmt.Printf("error raised when closing a response body: %s\n", err)
+			fmt.Fprintf(os.Stderr, "error raised when closing a response body: %s\n", err)
 		}
 	case responseChannel <- response:
 	}
@@ -140,13 +140,13 @@ func processArguments() (*CliArguments, error) {
 }
 
 func outputResponse(response *http.Response) error {
-	fmt.Print("Response received:\n\n")
+	fmt.Fprint(os.Stderr, "Response received:\n\n")
 
-	fmt.Printf("Status code: %d\n\n", response.StatusCode)
+	fmt.Fprintf(os.Stderr, "Status code: %d\n\n", response.StatusCode)
 
-	fmt.Printf("Headers:\n")
+	fmt.Fprintf(os.Stderr, "Headers:\n")
 	for name, value := range response.Header {
-		fmt.Printf("%s: %s\n", name, value)
+		fmt.Fprintf(os.Stderr, "%s: %s\n", name, value)
 	}
 
 	body, err := io.ReadAll(response.Body)
@@ -154,7 +154,7 @@ func outputResponse(response *http.Response) error {
 		return fmt.Errorf("error raised when reading a response body: %w", err)
 	}
 
-	fmt.Println("\nBody:")
+	fmt.Fprintf(os.Stderr, "\nBody:")
 	bodyString := string(body)
 	fmt.Println(bodyString)
 
