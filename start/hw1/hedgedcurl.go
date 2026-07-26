@@ -144,7 +144,7 @@ func processArguments() (*CliArguments, error) {
 }
 
 func outputResponse(response *http.Response) error {
-	fmt.Printf("Response received:\n\n")
+	fmt.Print("Response received:\n\n")
 
 	fmt.Printf("Status code: %d\n\n", response.StatusCode)
 
