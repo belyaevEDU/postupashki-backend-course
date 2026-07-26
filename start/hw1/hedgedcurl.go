@@ -53,6 +53,7 @@ func main() {
 
 		if !result {
 			fmt.Println(invalidUrlMessage)
+			os.Exit(1)
 		}
 	}
 
