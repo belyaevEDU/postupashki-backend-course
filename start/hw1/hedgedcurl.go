@@ -36,10 +36,14 @@ const (
 )
 
 func main() {
+	os.Exit(run())
+}
+
+func run() int {
 	cliArguments, err := processArguments()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "error raised when parsing cli arguments: %s\n", err)
-		os.Exit(badCliArgumentsErrorCode)
+		return badCliArgumentsErrorCode
 	}
 
 	if cliArguments.help || len(cliArguments.urls) == 0 {
@@ -48,16 +52,16 @@ func main() {
 	}
 
 	if cliArguments.help {
-		os.Exit(0)
+		return 0
 	} else if len(cliArguments.urls) == 0 {
-		os.Exit(badCliArgumentsErrorCode)
+		return badCliArgumentsErrorCode
 	}
 
 	for _, urlString := range cliArguments.urls {
 		_, err := url.ParseRequestURI(urlString)
 		if err != nil { // an error is present if the url is invalid
 			fmt.Fprintf(os.Stderr, "error raised when validating a url: %s\n", err)
-			os.Exit(urlValidationErrorCode)
+			return urlValidationErrorCode
 		}
 	}
 
@@ -86,7 +90,7 @@ outer:
 		case <-ctx.Done(): // means timeout ?
 			fmt.Println(ctx.Err())
 			fmt.Fprintln(os.Stderr, timedOutMessage)
-			os.Exit(timeoutErrorCode)
+			return timeoutErrorCode
 		case response := <-responseChannel:
 			defer func() {
 				err := response.Body.Close()
@@ -104,6 +108,7 @@ outer:
 		}
 	}
 
+	return 0
 }
 
 func makeRequest(ctx context.Context, url string, client *http.Client, responseChannel chan *http.Response, errorChannel chan error) {
