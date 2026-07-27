@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -87,10 +88,12 @@ outer:
 			if len(errorSlice) == len(cliArguments.urls) {
 				break outer
 			}
-		case <-ctx.Done(): // means timeout ?
-			fmt.Println(ctx.Err())
-			fmt.Fprintln(os.Stderr, timedOutMessage)
-			return timeoutErrorCode
+		case <-ctx.Done():
+			if errors.Is(ctx.Err(), context.DeadlineExceeded) {
+				fmt.Fprintln(os.Stderr, timedOutMessage)
+				return timeoutErrorCode
+			}
+			break outer
 		case response := <-responseChannel:
 			defer func() {
 				err := response.Body.Close()
