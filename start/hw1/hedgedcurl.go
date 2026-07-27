@@ -62,6 +62,8 @@ func main() {
 	}
 
 	responseChannel := make(chan *http.Response)
+	errorChannel := make(chan error)
+	errorSlice := make([]error, 0, len(cliArguments.urls))
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*time.Duration(cliArguments.timeout))
 	// the docs state that calling CancelFunc after the 1st call, subsequent calls do nothing
 	// So we don't have to handle the case, when we call cancel after receiving a response from responseChannel
@@ -70,30 +72,41 @@ func main() {
 	httpClient := http.Client{}
 
 	for _, url := range cliArguments.urls {
-		go makeRequest(ctx, url, &httpClient, responseChannel)
+		go makeRequest(ctx, url, &httpClient, responseChannel, errorChannel)
 	}
 
-	select {
-	case <-ctx.Done(): // means timeout ?
-		fmt.Fprintln(os.Stderr, timedOutMessage)
-		os.Exit(timeoutErrorCode)
-	case response := <-responseChannel:
-		defer func() {
-			err := response.Body.Close()
-			if err != nil {
-				fmt.Fprintf(os.Stderr, "error raised when closing a response body: %s\n", err)
+outer:
+	for {
+		select {
+		case err := <-errorChannel:
+			errorSlice = append(errorSlice, err)
+			if len(errorSlice) == len(cliArguments.urls) {
+				break outer
 			}
-		}()
+		case <-ctx.Done(): // means timeout ?
+			fmt.Println(ctx.Err())
+			fmt.Fprintln(os.Stderr, timedOutMessage)
+			os.Exit(timeoutErrorCode)
+		case response := <-responseChannel:
+			defer func() {
+				err := response.Body.Close()
+				if err != nil {
+					fmt.Fprintf(os.Stderr, "error raised when closing a response body: %s\n", err)
+				}
+			}()
 
-		err = outputResponse(response)
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "error raised when outputting response: %s\n", err)
+			err = outputResponse(response)
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "error raised when outputting response: %s\n", err)
+			}
+			cancel()
+			break outer
 		}
-		cancel()
 	}
+
 }
 
-func makeRequest(ctx context.Context, url string, client *http.Client, responseChannel chan *http.Response) { // отдельный канал для ошибок, выход из цикла только если == len. потом обрабатываем
+func makeRequest(ctx context.Context, url string, client *http.Client, responseChannel chan *http.Response, errorChannel chan error) {
 	request, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "error raised when creating request: %s\n", err)
@@ -102,9 +115,9 @@ func makeRequest(ctx context.Context, url string, client *http.Client, responseC
 
 	response, err := client.Do(request)
 	if err != nil {
-		if ctx.Err() == nil && !errorIsTimeout(err) {
-			fmt.Fprintf(os.Stderr, "error raised when requesting from %s: %s\n", url, err)
-		}
+		// как я понял, отмененный нами контекст при получении ответа, в том числе и ложит эти горутины
+		// и ошибка context.Canceled не доходит
+		errorChannel <- err
 		return
 	}
 
