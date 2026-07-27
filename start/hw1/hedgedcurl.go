@@ -108,6 +108,15 @@ outer:
 		}
 	}
 
+	if len(errorSlice) == len(cliArguments.urls) {
+		fmt.Fprintf(os.Stderr, "Все запросы завершились с ошибками:\n\n")
+
+		for _, val := range errorSlice { // urls are already in the errors by default
+			fmt.Fprintf(os.Stderr, "%s\n", val)
+		}
+		return badCliArgumentsErrorCode
+	}
+
 	return 0
 }
 
