@@ -23,9 +23,10 @@ const (
 	defaultTimeout       = 15
 	timeoutArgErrMessage = "Incorrect usage of the timeout argument"
 
-	badCliArgumentsErrorCode = 2
-	urlValidationErrorCode   = 3
-	timeoutErrorCode         = 228
+	badCliArgumentsErrorCode   = 2
+	urlValidationErrorCode     = 3
+	allRequestsFailedErrorCode = 227
+	timeoutErrorCode           = 228
 
 	helpMessage = `Запрос к нескольким серверам, вернет первый полученный ответ
 ./hedgedcurl https://motherfuckingwebsite.com/ https://thebestmotherfucking.website/ https://belyaev.work`
@@ -117,7 +118,7 @@ outer:
 		for _, val := range errorSlice { // urls are already in the errors by default
 			fmt.Fprintf(os.Stderr, "%s\n", val)
 		}
-		return badCliArgumentsErrorCode
+		return allRequestsFailedErrorCode
 	}
 
 	return 0
