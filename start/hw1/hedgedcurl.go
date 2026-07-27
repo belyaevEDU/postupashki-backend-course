@@ -173,7 +173,7 @@ func processArguments() (*CliArguments, error) {
 func outputResponse(response *http.Response) error {
 	fmt.Fprint(os.Stderr, "Response received:\n\n")
 
-	fmt.Fprintf(os.Stderr, "Status code: %d\n\n", response.StatusCode)
+	fmt.Fprintf(os.Stderr, "%s %d\n\n", response.Proto, response.StatusCode)
 
 	fmt.Fprintf(os.Stderr, "Headers:\n")
 	for name, value := range response.Header {
