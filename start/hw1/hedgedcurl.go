@@ -69,7 +69,7 @@ func run() int {
 
 	responseChannel := make(chan *http.Response)
 	errorChannel := make(chan error)
-	errorSlice := make([]error, 0, len(cliArguments.urls))
+	allErrorsChannel := make(chan []error)
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*time.Duration(cliArguments.timeout))
 	// the docs state that calling CancelFunc after the 1st call, subsequent calls do nothing
 	// So we don't have to handle the case, when we call cancel after receiving a response from responseChannel
@@ -81,35 +81,29 @@ func run() int {
 		go makeRequest(ctx, url, &httpClient, responseChannel, errorChannel)
 	}
 
-outer:
-	for {
-		select {
-		case err := <-errorChannel:
-			errorSlice = append(errorSlice, err)
-			if len(errorSlice) == len(cliArguments.urls) {
-				break outer
-			}
-		case <-ctx.Done():
-			if errors.Is(ctx.Err(), context.DeadlineExceeded) {
-				fmt.Fprintln(os.Stderr, timedOutMessage)
-				return timeoutErrorCode
-			}
-			break outer
-		case response := <-responseChannel:
-			defer func() {
-				err := response.Body.Close()
-				if err != nil {
-					fmt.Fprintf(os.Stderr, "error raised when closing a response body: %s\n", err)
-				}
-			}()
+	var errorSlice []error
+	go collectErrors(ctx, errorSlice, errorChannel, allErrorsChannel, len(cliArguments.urls))
 
-			err = outputResponse(response)
-			if err != nil {
-				fmt.Fprintf(os.Stderr, "error raised when outputting response: %s\n", err)
-			}
-			cancel()
-			break outer
+	select {
+	case errorSlice = <-allErrorsChannel:
+	case <-ctx.Done():
+		if errors.Is(ctx.Err(), context.DeadlineExceeded) {
+			fmt.Fprintln(os.Stderr, timedOutMessage)
+			return timeoutErrorCode
 		}
+	case response := <-responseChannel:
+		defer func() {
+			err := response.Body.Close()
+			if err != nil {
+				fmt.Fprintf(os.Stderr, "error raised when closing a response body: %s\n", err)
+			}
+		}()
+
+		err = outputResponse(response)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "error raised when outputting response: %s\n", err)
+		}
+		cancel()
 	}
 
 	if len(errorSlice) == len(cliArguments.urls) {
@@ -133,9 +127,9 @@ func makeRequest(ctx context.Context, url string, client *http.Client, responseC
 
 	response, err := client.Do(request)
 	if err != nil {
-		// как я понял, отмененный нами контекст при получении ответа, в том числе и ложит эти горутины
-		// и ошибка context.Canceled не доходит
-		errorChannel <- err
+		if ctx.Err() == nil {
+			errorChannel <- err
+		}
 		return
 	}
 
@@ -146,6 +140,22 @@ func makeRequest(ctx context.Context, url string, client *http.Client, responseC
 			fmt.Fprintf(os.Stderr, "error raised when closing a response body: %s\n", err)
 		}
 	case responseChannel <- response:
+	}
+}
+
+func collectErrors(ctx context.Context, errorSlice []error, inErrorChannel chan error, allErrorChannel chan []error, urlsAmount int) {
+outer:
+	for {
+		select {
+		case err := <-inErrorChannel:
+			errorSlice = append(errorSlice, err)
+			if len(errorSlice) == urlsAmount {
+				allErrorChannel <- errorSlice
+				break outer
+			}
+		case <-ctx.Done():
+			break outer
+		}
 	}
 }
 
