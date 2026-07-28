@@ -122,6 +122,7 @@ func makeRequest(ctx context.Context, url string, client *http.Client, responseC
 	request, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "error raised when creating request: %s\n", err)
+		errorChannel <- err
 		return
 	}
 
